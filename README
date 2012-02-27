@@ -1,0 +1,11 @@
+Go implementation of https://github.com/jmuk/blogplus
+
+$ export GOPATH=$(pwd)
+$ mkdir src
+$ cd src
+$ go get github.com/ukai/blogplus
+$ cd github.com/ukai/blogplus/cmd/blogplus
+$ go build .
+$ ./blogplus --help
+
+For Google App Engine, use https://github.com/ukai/blogplus-gae
