@@ -1,6 +1,7 @@
 package blogplus
 
 import (
+	"encoding/xml"
 	"html/template"
 	"io/ioutil"
 	"net/url"
@@ -16,7 +17,6 @@ var (
 	EntryTempl      = BaseTempl.New("entry")
 	SidebarTempl    = BaseTempl.New("sidebar")
 	ArchiveTempl    = SidebarTempl.New("archive")
-	AtomFeedTempl   = template.New("atom_feed")
 	ArchivesJsTempl = text_template.New("archives.js")
 
 	ImageAttachmentTempl = template.New("image_attachment")
@@ -52,7 +52,7 @@ const (
 </html>
 `
 
-	entryTempl    = `
+	entryTempl      = `
  <div class="post">
   <div class="content">{{.Object.HTMLContent}}</div>
   {{if .FormedAttachment }}
@@ -79,8 +79,8 @@ const (
   <hr class="entry" />
  </div>
 `
-	sidebarTempl  = `{{template "archive" .}}`
-	archiveTempl  = `<h2>Archives</h2>
+	sidebarTempl    = `{{template "archive" .}}`
+	archiveTempl    = `<h2>Archives</h2>
 <div class="content">
  <select id="select_archive">
    <option value=""></option>
@@ -90,30 +90,6 @@ const (
  </select>
 </div>
 `
-	atomFeedTempl = `<feed xmlns="http://www.w3.org/2005/Atom">
- <id>{{.ServerRootURL}}</id>
- <title>{{.Blogplus.Title}}</title>
- <link href="{{.ServerRootURL}}` + mainPath + `"/>
- <link href="{{.ServerRootURL}}` + atomFeedPath + `" ref="self"/>
- <updated>{{.GlobalUpdated}}</updated>
- <author>
-  <name>{{.Blogplus.AuthorName}}</name>
-  <uri>{{.Blogplus.AuthorUri}}</uri>
- </author>
- <logo>{{.Blogplus.LogoUrl}}</logo>
- {{range .Posts}}
- <entry>
-  <id>{{.Permalink}}</id>
-  <link href="{{.Permalink}}"/>
-  <title>{{.Object.Subject}}</title>
-  <content type="html">{{.Object.HTMLContent}}</content>
-  <summary>{{.Object.HTMLContent}}</summary>
-  <published>{{.Published}}</published>
-  <updated>{{.Updated}}</updated>
- </entry>
- {{end}}
-</feed>`
-
 	archivesJsTempl = `
 (function() {
 function redirectToArchive(e) {
@@ -236,8 +212,6 @@ func init() {
 	}
 
 	_, err = ArchiveTempl.Parse(archiveTempl)
-
-	_, err = AtomFeedTempl.Parse(atomFeedTempl)
 	if err != nil {
 		panic(err)
 	}
@@ -301,4 +275,29 @@ type TemplateContext struct {
 
 func (tc *TemplateContext) ServerRootURL() string {
 	return tc.ServerRoot.String()
+}
+
+func GetAtomFeed(tc *TemplateContext) (data []byte, err error) {
+	feed := AtomFeed{
+		Id:         tc.ServerRoot.String(),
+		Title:      tc.Blogplus.Title,
+		Updated:    tc.GlobalUpdated,
+		AuthorName: tc.Blogplus.AuthorName,
+		AuthorUri:  tc.Blogplus.AuthorUri,
+		Logo:       tc.Blogplus.LogoUrl}
+	feed.Link = append(feed.Link, AtomLink{Href: tc.ServerRoot.String()})
+	feed.Link = append(feed.Link, AtomLink{Href: tc.ServerRoot.String() + atomFeedPath, Rel: "self"})
+	for _, post := range tc.Posts {
+		e := AtomEntry{
+			Id:    post.Permalink,
+			Title: post.Object.Subject,
+			Content: AtomContent{
+				Content: post.Object.Content,
+				Type:    "html"},
+			Summary:   post.Object.Content,
+			Published: post.Published,
+			Updated:   post.Updated}
+		feed.Entries = append(feed.Entries, e)
+	}
+	return xml.Marshal(feed)
 }

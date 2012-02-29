@@ -1,6 +1,7 @@
 package blogplus
 
 import (
+	"encoding/xml"
 	"fmt"
 	"html/template"
 	"io"
@@ -92,7 +93,6 @@ func (b *Blogplus) ExtractTemplates(dir string) {
 	createTempl(dir, "entry.tmpl", entryTempl)
 	createTempl(dir, "sidebar.tmpl", sidebarTempl)
 	createTempl(dir, "archive.tmpl", archiveTempl)
-	createTempl(dir, "atom_feed.tmpl", atomFeedTempl)
 	createTempl(dir, "archives.js.tmpl", archivesJsTempl)
 	createTempl(dir, "image_attachment.tmpl", imageAttachmentTempl)
 	createTempl(dir, "text_attachment.tmpl", textAttachmentTempl)
@@ -109,8 +109,6 @@ func (b *Blogplus) LoadTemplates(dir string) {
 	loadTempl(dir, "sidebar.tmpl", SidebarTempl)
 	ArchiveTempl = SidebarTempl.New("archive")
 	loadTempl(dir, "archive.tmpl", ArchiveTempl)
-	AtomFeedTempl = template.New("atom_feed")
-	loadTempl(dir, "atom_feed.tmpl", AtomFeedTempl)
 	ArchivesJsTempl = text_template.New("archives.js")
 	loadTextTempl(dir, "archives.js.tmpl", ArchivesJsTempl)
 	ImageAttachmentTempl = template.New("image_attachment")
@@ -251,12 +249,11 @@ func (b *Blogplus) ServeFeed(w http.ResponseWriter, req *http.Request) {
 			globalUpdated = post.Updated
 		}
 	}
-	// TODO(ukai): weekly-2012-02-22: template will mangle <? to &lt;?...
-	_, err := io.WriteString(w, `<?xml version="1.0" encoding="utf-8"?>`)
+	_, err := io.WriteString(w, xml.Header)
 	if err != nil {
 		log.Println("servefeed:", err)
 	}
-	err = AtomFeedTempl.Execute(w,
+	data, err := GetAtomFeed(
 		&TemplateContext{
 			Posts:         posts,
 			ServerRoot:    getServerRoot(b, req),
@@ -264,7 +261,11 @@ func (b *Blogplus) ServeFeed(w http.ResponseWriter, req *http.Request) {
 			GlobalUpdated: globalUpdated,
 			Blogplus:      b})
 	if err != nil {
-		log.Println("template error:", err)
+		log.Println("atom feed error:", err)
+	}
+	_, err = w.Write(data)
+	if err != nil {
+		log.Println("atom feed write error:", err)
 	}
 }
 
