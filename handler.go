@@ -249,7 +249,7 @@ func (b *Blogplus) ServeFeed(w http.ResponseWriter, req *http.Request) {
 			globalUpdated = post.Updated
 		}
 	}
-	w.Header().Set("Content-Type","application/atom+xml")
+	w.Header().Set("Content-Type", "application/atom+xml")
 	_, err := io.WriteString(w, xml.Header)
 	if err != nil {
 		log.Println("servefeed:", err)
@@ -276,7 +276,7 @@ func (b *Blogplus) ServeForceFetch(w http.ResponseWriter, req *http.Request) {
 }
 
 func (b *Blogplus) ServeArchivesJs(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type","text/javascript")
+	w.Header().Set("Content-Type", "text/javascript")
 	err := ArchivesJsTempl.Execute(w,
 		&TemplateContext{
 			ServerRoot: getServerRoot(b, req),
