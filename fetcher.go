@@ -34,21 +34,23 @@ func (fetcher *Fetcher) GetActivities(client *http.Client, pageToken string) (*A
 	if err != nil {
 		return nil, err
 	}
-	if pageToken != "" && fetcher.fetchETag != "" {
+	if pageToken != "" {
 		fetcher.mu.Lock()
-		req.Header.Add("If-None-Match", fetcher.fetchETag)
+		if fetcher.fetchETag != "" {
+			req.Header.Add("If-None-Match", fetcher.fetchETag)
+		}
 		fetcher.mu.Unlock()
 	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	if pageToken != "" {
 		fetcher.mu.Lock()
 		fetcher.fetchETag = resp.Header.Get("ETag")
 		fetcher.mu.Unlock()
 	}
-	defer resp.Body.Close()
 	var data ActivityFeed
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return &data, err
