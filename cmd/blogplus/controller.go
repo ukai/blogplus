@@ -79,7 +79,7 @@ func (c *Controller) Run(fetcher *blogplus.Fetcher, storage blogplus.Storage) {
 		case <-time.After(c.timeout):
 		}
 		var posts []blogplus.Activity
-		if *activityId != "" {
+		if activityId != nil && *activityId != "" {
 			posts = fetcher.FetchPost(&http.Client{}, *activityId)
 		} else {
 			posts = fetcher.Fetch(&http.Client{})
