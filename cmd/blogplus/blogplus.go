@@ -14,7 +14,7 @@ var (
 	userId     string
 	key        string
 	addr       string
-	timeout    string
+	timeout    time.Duration
 	driver     string
 	datasource string
 	initDb     bool
@@ -34,7 +34,7 @@ func init() {
 	flag.StringVar(&userId, "user_id", "", "user id")
 	flag.StringVar(&key, "key", "", "api key")
 	flag.StringVar(&addr, "addr", ":80", "listen address")
-	flag.StringVar(&timeout, "timeout", "1h", "timeout")
+	flag.DurationVar(&timeout, "timeout", 1*time.Hour, "timeout")
 	flag.StringVar(&driver, "driver", "sqlite3", "database driver")
 	flag.StringVar(&datasource, "datasource", "blogplus.db", "datasource")
 	flag.BoolVar(&initDb, "init_db", false, "initialize db")
@@ -50,12 +50,9 @@ func init() {
 
 func main() {
 	flag.Parse()
-	t, err := time.ParseDuration(timeout)
-	if err != nil {
-		panic(err)
-	}
-	c := NewController(t)
+	c := NewController(timeout)
 	var s blogplus.Storage
+	var err error
 	if driver == "memory" {
 		s = blogplus.NewMemStorage()
 	} else {
