@@ -17,8 +17,8 @@ type ActivityFeed struct {
 type Activity struct {
 	ETag      string `json:"etag"`
 	Title     string `json:"title"`
-	Published string `json:published"` // RFC3339 timestamp
-	Updated   string `json:updated"`   // RFC3339 timestamp
+	Published string `json:"published"` // RFC3339 timestamp
+	Updated   string `json:"updated"`   // RFC3339 timestamp
 	Id        string `json:"id"`
 	Url       string `json:"url"`
 	Verb      string `json:"verb"`
