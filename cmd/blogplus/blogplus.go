@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ukai/blogplus"
-	_ "github.com/ukai/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"net/http"
 	"time"
